@@ -1,6 +1,7 @@
 import random
 import numpy as np 
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 from matplotlib.colors import ListedColormap
 import time
 from utils import save_solution
@@ -50,7 +51,7 @@ def show_algorithm_results(algorithm, maze, frame, title, points, n=0):
 
                         if n == 0:
                             st = time.time()
-                            path = algorithm(maze, start, goal)
+                            path, qq = algorithm(maze, start, goal)
                             et = time.time()
                             _time = et - st
                         else:
@@ -68,21 +69,36 @@ def show_algorithm_results(algorithm, maze, frame, title, points, n=0):
                         if path:
                             path_length = len(path)
                             length_label.config(text=f"Độ dài đường đi: {path_length}")
-
+                            # tôi muốn hoạt ảnh hiển thị trước khi tôi màu đường đi tói ưu
                             colored_maze = maze.copy()
-                            for x, y in path:
-                                colored_maze[x][y] = 2
-                            cmap = ListedColormap(["black","white","green"])
-                            ax.imshow(colored_maze, cmap=cmap)
-                            ax.set_title(f"{title}")
 
-                            for x, y in points:
-                                if (x,y) == points[0] or (x,y)==points[1]:
-                                    ax.scatter(y, x, c="red", s=25)
-                                else:
-                                    ax.scatter(y,x,c="blue", s=25)
+                            def update(frame):
+                                ax.scatter(qq[frame][1], qq[frame][0], c="green", s=25)
+                                canvas.draw()  # Cập nhật canvas sau khi vẽ
+
+                            def draw_path():
+                                for x, y in path:
+                                    colored_maze[x][y] = 2
+                                cmap = ListedColormap(["black","white","green"])
+                                ax.imshow(colored_maze, cmap=cmap)
+                                ax.set_title(f"{title}")
+
+                                for x, y in points:
+                                    if (x,y) == points[0] or (x,y)==points[1]:
+                                        ax.scatter(y, x, c="red", s=25)
+                                    else:
+                                        ax.scatter(y,x,c="blue", s=25)
+                                canvas.draw()
+                            # Tạo animation
+                            ani = FuncAnimation(fig, update, frames=len(qq), interval=100, blit=False, repeat=False)
 
                             canvas.draw()
+
+                            def on_button_click():
+                                draw_path()
+
+                            button = ttk.Button(frame, text="Hiển thị đường đi", command=on_button_click)
+                            button.pack(pady=10)
 
                             save_solution(maze, start, goal, path, algorithm, _time)
                         else:
@@ -95,7 +111,7 @@ def show_algorithm_results(algorithm, maze, frame, title, points, n=0):
                         print("Hãy chọn các ô trắng!")
             else:
                 print("Điểm chọn ngoài phạm vi mê cung!")
-    canvas.mpl_connect("button_press_event", on_click)    
+    canvas.mpl_connect("button_press_event", on_click)
     return time_label, length_label, start_label, goal_label
 
 def visualize_maze(maze, n):

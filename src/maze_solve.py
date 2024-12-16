@@ -28,6 +28,7 @@ def bfs(maze, start, goal, blocks=[]):
     directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
     q = Queue()
+    qq = []
     q.put(start)
     visited[start[0]][start[1]] = 1
 
@@ -35,7 +36,7 @@ def bfs(maze, start, goal, blocks=[]):
         current = q.get()
 
         if current == goal:
-            return re_path(maze, came_from, current)
+            return re_path(maze, came_from, current), qq
         
         for dx, dy in directions:
             new_state = (current[0] + dx, current[1] + dy)
@@ -45,6 +46,7 @@ def bfs(maze, start, goal, blocks=[]):
                     came_from[new_state] = current
                     visited[new_state[0]][new_state[1]] = 1
                     q.put(new_state)
+                    qq.append(new_state)
     return []
 
 
@@ -59,6 +61,7 @@ def a_star(maze, start, goal):
     directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
     pq = PriorityQueue()
+    qq = []
     pq.put((0,start))
 
     g = {start : 0}
@@ -68,7 +71,7 @@ def a_star(maze, start, goal):
         _, current = pq.get()
 
         if current == goal:
-            return re_path(maze, came_from, current)
+            return re_path(maze, came_from, current), qq
 
         for dx, dy in directions:
             new_state = (current[0] + dx, current[1] + dy)
@@ -81,6 +84,7 @@ def a_star(maze, start, goal):
                     f[new_state] = new_f
                     g[new_state] = new_g
                     pq.put((new_f, new_state))
+                    qq.append(new_state)
     return None
 
 
