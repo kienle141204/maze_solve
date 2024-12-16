@@ -179,5 +179,37 @@ def simulated_annealing(maze, check_points, start, goal):
 
     return best_cost, best_checkpoints, path
 
+def a_star_weighted(maze, start, goal):
+
+    rows, cols = len(maze), len(maze[0])
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  
+
+
+    pq = PriorityQueue()
+    pq.put((0, start))  
+
+    g = {start: 0}
+    came_from = {}
+
+    while not pq.empty():
+        _, current = pq.get()  
+
+        if current == goal:
+            return re_path(maze, came_from, current)
+
+
+        for dx, dy in directions:
+            neighbor = (current[0] + dx, current[1] + dy)
+
+            if 0 <= neighbor[0] < rows and 0 <= neighbor[1] < cols and maze[neighbor[0]][neighbor[1]] > 0:
+                new_g = g[current] + maze[neighbor[0]][neighbor[1]]
+
+                if neighbor not in g or new_g < g[neighbor]:
+                    g[neighbor] = new_g
+                    new_f = new_g + heurictics(neighbor, goal)  # f(n) = g(n) + h(n)
+                    came_from[neighbor] = current
+                    pq.put((new_f, neighbor)) 
+    return None  
+
 
 
