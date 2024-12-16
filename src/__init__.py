@@ -26,7 +26,7 @@ class Maze:
             for dx, dy in directions:
                 new_x, new_y = x + dx, y + dy
                 if 0 < new_x < 2*m and 0 < new_y < 2*n and maze[new_x][new_y] != 1:
-                    neighbors.append((new_x,new_y))
+                    neighbors.append((new_x, new_y))
 
             if neighbors:
                 nx, ny = random.choice(neighbors)

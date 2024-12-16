@@ -33,84 +33,139 @@ def show_algorithm_results(algorithm, maze, frame, title, points, n=0):
     goal_label.pack(pady=5)
 
     def on_click(event):
-        if len(points) < 2 + n:
-            x, y = int(round(event.ydata)), int(round(event.xdata))
+        if n == 0:
+            if len(points) < 2:
+                x, y = int(round(event.ydata)), int(round(event.xdata))
 
-            if 0 <= x < maze.shape[0] and 0 <= y < maze.shape[1]:
-                if maze[x][y] != 0 and (x, y) not in points:
-                    points.append((x,y))
-                    if len(points) <= 2:
-                        ax.scatter(y, x, c="red", s=25)
-                    else:
-                        ax.scatter(y, x, c="blue", s=25)
-                    canvas.draw()
+                if 0 <= x < maze.shape[0] and 0 <= y < maze.shape[1]:
+                    if maze[x][y] != 0 and (x, y) not in points:
+                        points.append((x,y))
+                        if len(points) <= 2:
+                            ax.scatter(y, x, c="red", s=25)
+                        else:
+                            ax.scatter(y, x, c="blue", s=25)
+                        canvas.draw()
 
-                    if len(points) == 2 + n:
-                        start, goal = points[0] , points[1]
-                        print(f"Start: {start}, Goal: {goal}")
+                        if len(points) == 2:
+                            start, goal = points[0] , points[1]
+                            print(f"Start: {start}, Goal: {goal}")
 
-                        if n == 0:
+
                             st = time.time()
                             path, qq = algorithm(maze, start, goal)
                             et = time.time()
                             _time = et - st
+
+
+
+                            time_label.config(text=f"Thời gian: {_time:.8f} giây")
+                            start_label.config(text=f"Start: {start}")
+                            goal_label.config(text=f"Goal: {goal}")
+
+                            if path:
+                                path_length = len(path)
+                                length_label.config(text=f"Độ dài đường đi: {path_length}")
+                                # tôi muốn hoạt ảnh hiển thị trước khi tôi màu đường đi tói ưu
+                                colored_maze = maze.copy()
+
+                                def update(frame):
+                                    ax.scatter(qq[frame][1], qq[frame][0], c="green", s=25)
+                                    canvas.draw()  # Cập nhật canvas sau khi vẽ
+
+                                def draw_path():
+                                    for x, y in path:
+                                        colored_maze[x][y] = 2
+                                    cmap = ListedColormap(["black","white","green"])
+                                    ax.imshow(colored_maze, cmap=cmap)
+                                    ax.set_title(f"{title}")
+
+                                    for x, y in points:
+                                        if (x,y) == points[0] or (x,y)==points[1]:
+                                            ax.scatter(y, x, c="red", s=25)
+                                        else:
+                                            ax.scatter(y,x,c="blue", s=25)
+                                    canvas.draw()
+                                # Tạo animation
+                                if n==0:
+                                    ani = FuncAnimation(fig, update, frames=len(qq), interval=100, blit=False, repeat=False)
+
+                                canvas.draw()
+
+                                def on_button_click():
+                                    draw_path()
+
+                                button = ttk.Button(frame, text="Hiển thị đường đi", command=on_button_click)
+                                button.pack(pady=10)
+
+                                save_solution(maze, start, goal, path, algorithm, _time)
+                            else:
+                                length_label.config(text="Độ dài đường đi: Không tìm thấy")
+                                print("Không tìm thấy đường đi!")
+                    else:
+                        if (x, y) in points:
+                            print("Ô này đã được chọn rồi!")
                         else:
+                            print("Hãy chọn các ô trắng!")
+                else:
+                    print("Điểm chọn ngoài phạm vi mê cung!")
+        else:
+            if len(points) < 2 + n:
+                x, y = int(round(event.ydata)), int(round(event.xdata))
+
+                if 0 <= x < maze.shape[0] and 0 <= y < maze.shape[1]:
+                    if maze[x][y] != 0 and (x, y) not in points:
+                        points.append((x, y))
+                        if len(points) <= 2:
+                            ax.scatter(y, x, c="red", s=25)
+                        else:
+                            ax.scatter(y, x, c="blue", s=25)
+                        canvas.draw()
+
+                        if len(points) == 2 + n:
+                            start, goal = points[0], points[1]
+                            print(f"Start: {start}, Goal: {goal}")
+
+
                             st = time.time()
                             _, b, path = simulated_annealing(maze, points[2:], points[0], points[1])
                             print(f"thứ tự đi qua tối ưu là :  start -> {b} -> goal")
                             et = time.time()
                             _time = et - st
 
+                            time_label.config(text=f"Thời gian: {_time:.8f} giây")
+                            start_label.config(text=f"Start: {start}")
+                            goal_label.config(text=f"Goal: {goal}")
 
-                        time_label.config(text=f"Thời gian: {_time:.8f} giây")
-                        start_label.config(text=f"Start: {start}")
-                        goal_label.config(text=f"Goal: {goal}")
+                            if path:
+                                print(path)
+                                path_length = len(path)
+                                length_label.config(text=f"Độ dài đường đi: {path_length}")
+                                # tôi muốn hoạt ảnh hiển thị trước khi tôi màu đường đi tói ưu
+                                colored_maze = maze.copy()
 
-                        if path:
-                            path_length = len(path)
-                            length_label.config(text=f"Độ dài đường đi: {path_length}")
-                            # tôi muốn hoạt ảnh hiển thị trước khi tôi màu đường đi tói ưu
-                            colored_maze = maze.copy()
-
-                            def update(frame):
-                                ax.scatter(qq[frame][1], qq[frame][0], c="green", s=25)
-                                canvas.draw()  # Cập nhật canvas sau khi vẽ
-
-                            def draw_path():
                                 for x, y in path:
                                     colored_maze[x][y] = 2
-                                cmap = ListedColormap(["black","white","green"])
+                                cmap = ListedColormap(["black", "white", "green"])
                                 ax.imshow(colored_maze, cmap=cmap)
                                 ax.set_title(f"{title}")
 
                                 for x, y in points:
-                                    if (x,y) == points[0] or (x,y)==points[1]:
+                                    if (x, y) == points[0] or (x, y) == points[1]:
                                         ax.scatter(y, x, c="red", s=25)
                                     else:
-                                        ax.scatter(y,x,c="blue", s=25)
+                                        ax.scatter(y, x, c="blue", s=25)
                                 canvas.draw()
-                            # Tạo animation
-                            ani = FuncAnimation(fig, update, frames=len(qq), interval=100, blit=False, repeat=False)
-
-                            canvas.draw()
-
-                            def on_button_click():
-                                draw_path()
-
-                            button = ttk.Button(frame, text="Hiển thị đường đi", command=on_button_click)
-                            button.pack(pady=10)
-
-                            save_solution(maze, start, goal, path, algorithm, _time)
-                        else:
-                            length_label.config(text="Độ dài đường đi: Không tìm thấy")
-                            print("Không tìm thấy đường đi!")
-                else:
-                    if (x, y) in points:
-                        print("Ô này đã được chọn rồi!")
+                                save_solution(maze, start, goal, path, algorithm, _time)
+                            else:
+                                length_label.config(text="Độ dài đường đi: Không tìm thấy")
+                                print("Không tìm thấy đường đi!")
                     else:
-                        print("Hãy chọn các ô trắng!")
-            else:
-                print("Điểm chọn ngoài phạm vi mê cung!")
+                        if (x, y) in points:
+                            print("Ô này đã được chọn rồi!")
+                        else:
+                            print("Hãy chọn các ô trắng!")
+                else:
+                    print("Điểm chọn ngoài phạm vi mê cung!")
     canvas.mpl_connect("button_press_event", on_click)
     return time_label, length_label, start_label, goal_label
 

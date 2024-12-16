@@ -99,7 +99,7 @@ def distance_to_checkpoint(maze, check_points, start, goal):
         for j in range(i+1, m+2):
             distance = 0
             if (new_check_points[i], new_check_points[j]) not in d:
-                path = bfs(maze, new_check_points[i], new_check_points[j])
+                path,_ = bfs(maze, new_check_points[i], new_check_points[j])
                 if path is not None:
                     distance = len(path)
                 d[(new_check_points[i], new_check_points[j])] = distance
@@ -121,12 +121,12 @@ def simulated_annealing(maze, check_points, start, goal):
 
     if len(check_points) == 1:
         path = []
-        path1 = bfs(maze,start, check_points[0], [goal])
-        path2 = bfs(maze, check_points[0], goal, [start])
+        path1, _ = bfs(maze,start, check_points[0], [goal])
+        path2, _ = bfs(maze, check_points[0], goal, [start])
         if path1 == [] or path2 ==[]:
             return 0,0,0
         else:
-            path = path1[:] + path2[:]
+            path = path1[:] + path2[1:]
         # draw_path(maze, path)
         return total_distance(maze, start, goal, check_points, d), check_points, path
     rows, cols = len(maze), len(maze[0])
@@ -159,22 +159,22 @@ def simulated_annealing(maze, check_points, start, goal):
     if best_checkpoints == []:
         return 0,0,0
     path = []
-    path1 = bfs(maze, start, best_checkpoints[0],[goal])
+    path1, _ = bfs(maze, start, best_checkpoints[0],[goal])
     if path1 == []:
         return 0,0,0
     else:
-        path += path1[:]
+        path += path1
     for i in range(0, len(best_checkpoints)-1):
-        path2 = bfs(maze, best_checkpoints[i], best_checkpoints[i+1], [goal])
+        path2, _  = bfs(maze, best_checkpoints[i], best_checkpoints[i+1], [goal])
         if path2 == []:
             return 0,0,0
         else:
-            path += path2[:]
-    path3 = bfs(maze, best_checkpoints[-1], goal, [start])
+            path += path2[1:]
+    path3, _ =bfs(maze, best_checkpoints[-1], goal, [start])
     if path3 == []:
         return 0,0,0
     else:
-        path += path3[:]
+        path += path3[1:]
     # draw_path(maze, path)
 
     return best_cost, best_checkpoints, path
