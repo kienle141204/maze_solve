@@ -179,6 +179,10 @@ def simulated_annealing(maze, check_points, start, goal):
 
     return best_cost, best_checkpoints, path
 
+
+#####################################################################################################
+# Mê cung có trọng số
+#####################################################################################################
 def a_star_weighted(maze, start, goal):
 
     rows, cols = len(maze), len(maze[0])
@@ -211,5 +215,45 @@ def a_star_weighted(maze, start, goal):
                     pq.put((new_f, neighbor)) 
     return None  
 
+
+def dijkstra(maze, start, goal):
+    rows = len(maze)
+    cols = len(maze[0])
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+    
+    dist = {start: 0}
+    came_from = {}
+    pq = PriorityQueue()
+    pq.put((0, start))
+    visited = set()
+    qq = []
+
+    while not pq.empty():
+        current_dist, current = pq.get()
+        
+        if current in visited:
+            continue
+        
+        visited.add(current)
+        qq.append(current)
+        
+        if current == goal:
+            return re_path(came_from, current), qq
+        
+        for dx, dy in directions:
+            new_state = (current[0] + dx, current[1] + dy)
+            
+            if 0 <= new_state[0] < rows and 0 <= new_state[1] < cols:
+                weight = maze[new_state[0]][new_state[1]]
+                
+                if weight != 0 and new_state not in visited:
+                    new_dist = current_dist + weight
+                    
+                    if new_dist < dist.get(new_state, float('inf')):
+                        dist[new_state] = new_dist
+                        came_from[new_state] = current
+                        pq.put((new_dist, new_state))
+
+    return [], []
 
 
