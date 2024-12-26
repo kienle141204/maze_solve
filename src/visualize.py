@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.colors import ListedColormap
 import time
-from utils import save_solution
+from utils import save_solution, matplot
 from __init__ import Maze
 from maze_solve import bfs, a_star, simulated_annealing
 
@@ -31,6 +31,9 @@ def show_algorithm_results(algorithm, maze, frame, title, points, n=0):
     start_label.pack(pady=5)
     goal_label = ttk.Label(frame, text="Goal: --", font=("Arial", 12))
     goal_label.pack(pady=5)
+
+    _time = 0
+    path_length = 0
 
     def on_click(event):
         if n == 0:
@@ -87,7 +90,7 @@ def show_algorithm_results(algorithm, maze, frame, title, points, n=0):
                                     canvas.draw()
                                 # Tạo animation
                                 if n==0:
-                                    ani = FuncAnimation(fig, update, frames=len(qq), interval=100, blit=False, repeat=False)
+                                    ani = FuncAnimation(fig, update, frames=len(qq), interval=20, blit=False, repeat=False)
 
                                 canvas.draw()
 
@@ -98,6 +101,7 @@ def show_algorithm_results(algorithm, maze, frame, title, points, n=0):
                                 button.pack(pady=10)
 
                                 save_solution(maze, start, goal, path, algorithm, _time)
+
                             else:
                                 length_label.config(text="Độ dài đường đi: Không tìm thấy")
                                 print("Không tìm thấy đường đi!")
@@ -167,7 +171,7 @@ def show_algorithm_results(algorithm, maze, frame, title, points, n=0):
                 else:
                     print("Điểm chọn ngoài phạm vi mê cung!")
     canvas.mpl_connect("button_press_event", on_click)
-    return time_label, length_label, start_label, goal_label
+    return _time, path_length
 
 def visualize_maze(maze, n):
     root = tk.Tk()
@@ -188,9 +192,11 @@ def visualize_maze(maze, n):
         bfs_points = []
         a_star_points = []
 
-        show_algorithm_results(bfs, maze, bfs_frame, "BFS", bfs_points, n)
+        ttime1, steps1 = show_algorithm_results(bfs, maze, bfs_frame, "BFS", bfs_points,n)
 
-        show_algorithm_results(a_star, maze, a_star_frame, "A STAR", a_star_points, n)
+        ttime2, steps2 = show_algorithm_results(a_star, maze, a_star_frame, "A STAR", a_star_points,n)
+
+        #matplot(ttime1, ttime2, steps1, steps2, "bfs", "a*")
     else:
         frame = ttk.Frame(main_frame)
         frame.pack(fill=tk.BOTH, expand=True, padx=5)

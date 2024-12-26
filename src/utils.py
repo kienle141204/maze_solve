@@ -1,6 +1,7 @@
 import json
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 
 def save_solution(maze, start, goal, path, algorithm, _time):
     steps = len(path)
@@ -29,4 +30,30 @@ def save_solution(maze, start, goal, path, algorithm, _time):
     print(f'Solution saved to {out_path}')
 
 
+def matplot(ttime1, ttime2, steps1, steps2, case1, case2):
+    labels = [case1, case2]
+    
+    times = [ttime1, ttime2]
+    steps = [steps1, steps2]
+    
 
+    x = range(len(labels))
+    
+    fig, ax = plt.subplots(2, 1, figsize=(8, 8))
+    
+    # Biểu đồ thời gian
+    ax[0].bar(x, times, color=['blue', 'orange'], alpha=0.7)
+    ax[0].set_title('Comparison of Execution Times')
+    ax[0].set_ylabel('Time (s)')
+    ax[0].set_xticks(x)
+    ax[0].set_xticklabels(labels)
+    
+    # Biểu đồ số bước
+    ax[1].bar(x, steps, color=['green', 'red'], alpha=0.7)
+    ax[1].set_title('Comparison of Steps')
+    ax[1].set_ylabel('Steps')
+    ax[1].set_xticks(x)
+    ax[1].set_xticklabels(labels)
+    
+    plt.tight_layout()
+    plt.show()

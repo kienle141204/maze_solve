@@ -12,7 +12,10 @@ weights = None  # Ma trận chứa trọng số
 max_targets = 1  # Số đích tối đa
 target_count = 0  # Số đích hiện tại
 cell_size = 20  # Kích thước mỗi ô
-delay = 0.05
+delay = 0.02 #thời gian duyệt mỗi đỉnh
+a_star_time = 0  # Thời gian chạy cho thuật toán A*
+dijkstra_time = 0  # Thời gian chạy cho thuật toán Dijkstra
+total_weight = 0  # Biến để lưu tổng trọng số
 
 
 #####################################################################################################
@@ -105,6 +108,9 @@ def draw_path(row, col):
 def run_algorithm():
     """Chạy thuật toán A* để tìm đường đi."""
     global matrix
+    global a_star_time
+    start_time = time.time()
+
     start = None
     goal = None
     start_found = False
@@ -130,6 +136,10 @@ def run_algorithm():
             print("Không tìm thấy đường đi.")
     else:
         tk.messagebox.showerror("Lỗi", "Vui lòng đảm bảo có cả điểm bắt đầu và đích trong ma trận!")
+    end_time = time.time()
+    a_star_time = end_time - start_time
+    update_time_label()
+    calculate_total_weight(path)
 
 #####################################################################################################
 # A* end
@@ -228,6 +238,10 @@ def draw_path_djk(row, col):
 def run_algorithm_djk():
     """Chạy thuật toán A* để tìm đường đi."""
     global matrix
+    global dijkstra_time
+
+    start_time = time.time()
+
     start = None
     goal = None
     start_found = False
@@ -253,9 +267,70 @@ def run_algorithm_djk():
     else:
         tk.messagebox.showerror("Lỗi", "Vui lòng đảm bảo có cả điểm bắt đầu và đích trong ma trận!")
 
+    end_time = time.time()
+    dijkstra_time = end_time - start_time
+    update_time_label()
+    calculate_total_weight(path)
 #####################################################################################################
 # dijkstra end
 #####################################################################################################
+
+
+def update_time_label():
+    time_label.config(
+        text=f"A* Time: {a_star_time:.2f}s | Dijkstra Time: {dijkstra_time:.2f}s"
+    )
+
+# Tạo ma trận mê cung bằng thuật toán DFS
+def create_maze_dfs():
+    global matrix
+    m, n = matrix.shape  # Lấy kích thước ma trận
+
+    # Khởi tạo ma trận mê cung (tất cả đều là tường)
+    maze = np.ones((m, n), dtype=int)
+
+    directions = [(-2, 0), (2, 0), (0, -2), (0, 2)]  # Các hướng đi
+
+    stack = []
+    start_x, start_y = 1, 1  # Điểm bắt đầu
+    maze[start_x][start_y] = 0  # Đặt điểm bắt đầu là đường đi
+    stack.append((start_x, start_y))
+
+    while stack:
+        x, y = stack[-1]
+        neighbors = []
+
+        # Kiểm tra các ô lân cận có thể đi đến
+        for dx, dy in directions:
+            new_x, new_y = x + dx, y + dy
+            if 0 < new_x < m and 0 < new_y < n and maze[new_x][new_y] != 0:
+                neighbors.append((new_x, new_y))
+
+        if neighbors:
+            nx, ny = random.choice(neighbors)
+            maze[nx][ny] = 0  # Đặt ô này là đường đi
+            maze[(nx + x) // 2][(ny + y) // 2] = 0  # Đánh dấu ô giữa là đường đi (xóa tường giữa)
+            stack.append((nx, ny))
+        else:
+            stack.pop()
+
+    # Cập nhật ma trận ban đầu
+    matrix = maze
+
+    # Vẽ lại ma trận lên canvas
+    draw_grid()
+
+# Hàm tính tổng trọng số của đường đi
+def calculate_total_weight(path):
+    global total_weight
+    total_weight = 0
+
+    # Giả sử bạn có một ma trận trọng số (weights) đã được gán giá trị cho các ô
+    for x, y in path:
+        total_weight += weights[x, y]  # Thêm trọng số của ô vào tổng
+
+    # Cập nhật label hiển thị tổng trọng số
+    weight_label.config(text=f"Total Weight: {total_weight}")
 
 def create_matrix(rows, cols):
     """Tạo ma trận với kích thước tùy chỉnh."""
@@ -269,7 +344,10 @@ def create_matrix(rows, cols):
 def draw_grid():
     """Vẽ ma trận lên canvas."""
     global cell_size
+
     canvas.delete("all")
+    canvas_clone.delete("all")
+
     rows, cols = matrix.shape
     canvas_width = canvas.winfo_width()
     canvas_height = canvas.winfo_height()
@@ -354,6 +432,9 @@ def create_custom_matrix():
         create_matrix(rows, cols)
     except ValueError:
         tk.messagebox.showerror("Lỗi", "Vui lòng nhập kích thước hợp lệ!")
+    canvas.update()
+    canvas_clone.update()
+
 
 def assign_weights():
     """Đánh trọng số ngẫu nhiên cho các ô trắng."""
@@ -372,7 +453,6 @@ def assign_weights():
         tk.messagebox.showerror("Lỗi", "Vui lòng nhập khoảng trọng số hợp lệ!")
 
 def on_resize(event):
-    """Điều chỉnh lại ma trận khi cửa sổ thay đổi kích thước."""
     draw_grid()
 
 # Giao diện người dùng
@@ -384,11 +464,11 @@ root.geometry("1100x600")
 button_frame = tk.Frame(root, width=250, bg="#DDDDDD", highlightbackground="#AAAAAA", highlightthickness=1)
 button_frame.pack(side="left", fill="y")
 
-# Khung chứa canvas
+# Khung chứa canvas chính
 canvas_frame = tk.Frame(root, bg="white", highlightbackground="black", highlightthickness=1)
-canvas_frame.pack(side="right", fill="both", expand=True)
+canvas_frame.pack(side="right", fill="both", expand=True)  # Đảm bảo rằng khung chứa canvas sẽ lấp đầy không gian
 
-# Canvas thứ hai để hiển thị giống canvas chính
+# Canvas clone
 canvas_clone = tk.Canvas(canvas_frame, bg="white", highlightthickness=1)
 canvas_clone.pack(side="left", fill="both", expand=True)
 
@@ -417,6 +497,9 @@ tk.Label(target_frame, text="Max destination", bg="#DDDDDD", font=("Comic Sans M
 target_spinbox = tk.Spinbox(target_frame, from_=1, to=10, width=5, font=("Comic Sans MS", 12), command=lambda: set_max_targets(target_spinbox.get()))
 target_spinbox.pack(side="left")  # Gắn Spinbox cạnh Label
 
+create_button = tk.Button(button_frame, text="Auto generate wall", font=("Comic Sans MS", 12), command=create_maze_dfs)
+create_button.pack(pady=5)
+
 # Đánh trọng số
 tk.Label(button_frame, text="Weight range(a, b)", bg="#DDDDDD", font=("Comic Sans MS", 12)).pack(pady=5)
 weight_a_entry = tk.Entry(button_frame, width=5, font=("Comic Sans MS", 12))
@@ -440,9 +523,17 @@ mode_menu.pack(pady=5)
 tk.Button(button_frame, text="A* Algorithm", font=("Comic Sans MS", 12, "bold"), command=run_algorithm, bg="#FF5722", fg="white").pack(pady=10)
 tk.Button(button_frame, text="Dijkstra Algorithm", font=("Comic Sans MS", 12, "bold"),command= run_algorithm_djk, bg="#FF5722", fg="white").pack(pady=10)
 
-# Canvas để vẽ ma trận
+# Canvas chính
 canvas = tk.Canvas(canvas_frame, bg="white", highlightthickness=0)
-canvas.pack(fill="both", expand=True)
+canvas.pack(side="left", fill="both", expand=True)
+
+# Label hiển thị thời gian chạy thuật toán
+time_label = tk.Label(button_frame, text="A* Time: 0.0s | Dijkstra Time: 0.0s", font=("Comic Sans MS", 12),bg="#DDDDDD", width= 40, height= 1)
+time_label.pack(pady=5)
+
+weight_label = tk.Label(button_frame, text="Total Weight: 0", font=("Comic Sans MS", 12), bg="#DDDDDD",width= 40, height= 1)
+weight_label.pack(pady=5)
+
 canvas.bind("<Button-1>", cell_click)
 canvas.bind("<B1-Motion>", cell_drag)
 

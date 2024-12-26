@@ -47,7 +47,7 @@ def bfs(maze, start, goal, blocks=[]):
                     visited[new_state[0]][new_state[1]] = 1
                     q.put(new_state)
                     qq.append(new_state)
-    return []
+    return [], None 
 
 
 # A STAR
@@ -160,19 +160,21 @@ def simulated_annealing(maze, check_points, start, goal):
         return 0,0,0
     path = []
     path1, _ = bfs(maze, start, best_checkpoints[0],[goal])
+    print(path1)
     if path1 == []:
-        return 0,0,0
+        return 0,0,None
     else:
         path += path1
     for i in range(0, len(best_checkpoints)-1):
         path2, _  = bfs(maze, best_checkpoints[i], best_checkpoints[i+1], [goal])
         if path2 == []:
-            return 0,0,0
+            return 0,0,None 
         else:
             path += path2[1:]
     path3, _ =bfs(maze, best_checkpoints[-1], goal, [start])
+    print(path3)
     if path3 == []:
-        return 0,0,0
+        return 0,0,None 
     else:
         path += path3[1:]
     # draw_path(maze, path)
